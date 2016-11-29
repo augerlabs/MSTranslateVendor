@@ -8,10 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
-NSString * const kRequestTranslate;
-NSString * const kRequestTranslateArray;
-NSString * const kRequestDetectLanguage;
-NSString * const kRequestBreakSentences;
+extern NSString * const kRequestTranslate;
+extern NSString * const kRequestTranslateArray;
+extern NSString * const kRequestDetectLanguage;
+extern NSString * const kRequestBreakSentences;
 
 @interface TranslateNotification : NSObject
 
