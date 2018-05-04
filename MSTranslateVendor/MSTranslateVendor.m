@@ -22,6 +22,7 @@
     NSMutableArray *_translatedArray;
     NSMutableDictionary *_sentencesDict;
     NSUInteger _sentenceCount;
+    NSString *_translatedString;
 }
 @end
 
@@ -80,6 +81,7 @@ NSString * generateSchema(NSString * text)
     }
     
     _request = [[NSMutableURLRequest alloc] init];
+    _translatedString = [[NSString alloc] init];
     
     NSString *_appId = [[NSString stringWithFormat:@"Bearer %@", (!_accessToken)?[MSTranslateAccessTokenRequester sharedRequester].accessToken:_accessToken] urlEncodedUTF8String];
 
@@ -99,6 +101,7 @@ NSString * generateSchema(NSString * text)
     
     [NSURLConnection sendAsynchronousRequest:_request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *error)
      {
+         NSLog(@"Completed translation request %@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
          NSXMLParser *_parser = [[NSXMLParser alloc] initWithData:data];
          _parser.tag = REQUEST_TRANSLATE_TAG;
          _parser.delegate = self;
@@ -364,7 +367,9 @@ NSString * generateSchema(NSString * text)
 - (void)parserDidEndDocument:(NSXMLParser *)parser
 {
     _responseData = nil;
-    
+    if ([_translatedString length] > 0) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kRequestTranslate object:@{@"result" : _translatedString, @"isSuccessful": @YES}];
+    }
     if(parser.tag == REQUEST_TRANSLATE_ARRAY_TAG)
     {
         if([_translatedArray count])
@@ -391,7 +396,8 @@ NSString * generateSchema(NSString * text)
     if(parser.tag == REQUEST_TRANSLATE_TAG)
     {
         if([_elementString isEqualToString:@"string"])
-            [[NSNotificationCenter defaultCenter] postNotificationName:kRequestTranslate object:@{@"result" : string, @"isSuccessful": @YES}];
+            _translatedString = [_translatedString stringByAppendingString:string];
+
         else if([_elementString isEqualToString:@"h1"])
         {
             if([string isEqualToString:@"Argument Exception"])
